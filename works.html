@@ -34,14 +34,28 @@
 			
 			<div class="navbar-collapse navHeaderCollapse">
 				<ul class="nav navbar-nav navbar-right">
-					<li><a href="index.html">About</a></li>
+					<li><a href="about.html">About</a></li>
 					<li class="active"><a href = "#">Work Samples</a></li>
-					<li><a href="straps.html">Contact</a></li>
+					<li><a href="contact.html">Contact</a></li>
 				</ul>
 			</div>
 		</div>
 	</div>
-	
+	<div class="container">
+        <pre>&lt;script&gt;
+			function pictureChange(clicked)
+			{
+				var clicked_id=clicked.id;
+				if (clicked_id=="men")
+				(document.getElementById("theImage").src="images/boots.jpg");
+				else if (clicked_id == "ladies")
+				(document.getElementById("theImage").src="images/ladies.jpg");
+				else 
+				(document.getElementById("theImage").src="images/spacemarine.JPG");
+			}
+		&lt;/script&gt;</pre>
+    </div>
+        
 	<div class = "container">
 		<div class = "jumbotron">
 			<h1>Boots</h1>
