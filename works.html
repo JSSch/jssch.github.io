@@ -41,32 +41,158 @@
 			</div>
 		</div>
 	</div>
-	<div class="container">
-        <pre>&lt;script&gt;
-			function pictureChange(clicked)
-			{
-				var clicked_id=clicked.id;
-				if (clicked_id=="men")
-				(document.getElementById("theImage").src="images/boots.jpg");
-				else if (clicked_id == "ladies")
-				(document.getElementById("theImage").src="images/ladies.jpg");
-				else 
-				(document.getElementById("theImage").src="images/spacemarine.JPG");
-			}
-		&lt;/script&gt;</pre>
-    </div>
         
-	<div class = "container">
-		<div class = "jumbotron">
-			<h1>Boots</h1>
-			<p>
-			<button class="btn-default" id="men" onClick="pictureChange(this)">Men</button>
-			<button class="btn-default" id="ladies" onClick="pictureChange(this)">Women</button>
-			<button class="btn-default" id="spacemarine" onClick="pictureChange(this)">Space Marine</button>
-			</p>
-            <img id="theImage" src=images/boots.jpg></img>
-		</div>
-	</div>
-	</body>
+	<div class="container">
+        <div class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <h2>Boots (Javascript)</h2>
+                <br>
+                <p>The following is an example of Javascript being used to change an image when the user clicks one of three buttons.<br>
+                <br>
+                This block of code is embedded in the head tag of this page.  We declare a function called pictureChange() which accepts the clicked id from one of the three buttons.  We use document.getElementById to obtain the ID and evaluate it with a series of nested if statements.</p>
+                <br>
+<pre>&lt;script&gt;
+    function pictureChange(clicked)
+    {
+        var clicked_id=clicked.id;
+        if (clicked_id=="men")
+            (document.getElementById("theImage").src="images/boots.jpg");
+        else if (clicked_id == "women")
+            (document.getElementById("theImage").src="images/ladies.jpg");
+        else 
+            (document.getElementById("theImage").src="images/spacemarine.JPG");
+    }
+&lt;/script&gt;
+</pre>
+                <br>
+                <p>Below we have the following buttons embedded in html.</p>
+                <br>
+<pre>
+&lt;button class="btn-default" id="men" onClick="pictureChange(this)"&gt;Men&lt;/button&gt;
+&lt;button class="btn-default" id="women" onClick="pictureChange(this)">Women&lt;/button&gt;
+&lt;button class="btn-default" id="spacemarine" onClick="pictureChange(this)"&gt;Space Marine&lt;/button&gt;
+&lt;img id="theImage" src=images/boots.jpg&gt;&lt;/img&gt;
+</pre>
+                <br>
+                <p>The buttons are styled from the Bootstrap theme (which was selected from the fine folks at <a href="http://www.bootswatch.com">Bootswatch</a>) with just a little shift in color in the css file.  With this code in place, when the user clicks on one of the three buttons, the script listens for that onClick event and grabs the id of the button.  It then determines which image file path to use to replace "theImage" which is initialized with "men" by default.</p>
+                <br>
+
+                <div class = "jumbotron">
+                    <h1>Boots</h1>
+                    <button class="btn-default" id="men" onClick="pictureChange(this)">Men</button>
+                    <button class="btn-default" id="ladies" onClick="pictureChange(this)">Women</button>
+                    <button class="btn-default" id="spacemarine" onClick="pictureChange(this)">Space Marine</button>
+                    <img id="theImage" src=images/boots.jpg></img>
+                </div>      
+                <br>
+                <h2>MySteamPlay (Web API with .NET MVC)</h2>
+                <br>
+                <p>The following is an excerpt from a controller in an ongoing group project I contributed to.  The goal of the web application is a front end alternative to the Steam client user interface that gives the user better organizational control. Valve, the company that runs and operates Steam, has a robust (but poorly documented) API available for developers.
+                <br>
+                <br>
+                </p>
+<pre>// GET: GameLists/Create
+        public ActionResult Create()
+        {
+            string currentUserID = User.Identity.GetUserId();
+            ApplicationUser currentUser = Database.Users.Find(currentUserID);
+            string providerKey = currentUser.Logins.First().ProviderKey;
+
+            providerKey = providerKey.Substring(providerKey.Length - 17);
+
+            SteamWebAPI.SetGlobalKey(Security.apiKey);
+
+            var identity = SteamIdentity.FromSteamID(Int64.Parse(providerKey));
+
+            //JSON response from Steam 
+            var response = SteamWebAPI.General().IPlayerService().GetOwnedGames(identity).IncludeAppInfo().GetResponse();
+
+            //Iterate through each item and add it to database
+            foreach (var res in response.Data.Games)
+            {
+                TimeSpan timeSpan = res.PlayTimeTotal;
+
+                int totalHours = (int)timeSpan.TotalHours;
+
+                TagList tagList = new TagList()
+                {
+                    appID = res.AppID,
+                    userID = currentUserID
+                };
+
+                GameDescrip gameDesc = new GameDescrip()
+                {
+                    appID = res.AppID,
+                    playtime_forever = totalHours,
+                    userId = currentUserID,
+                    visible = true, //True by default for now.
+                    Tags = tagList
+                };
+
+                Game game = new Game();
+
+                if (res.Name != null)
+                {
+                    game.name = res.Name;
+                }
+                else
+                {
+                    game.name = res.AppID.ToString();
+                }
+                game.appID = res.AppID;
+                game.img_header_url = "http://cdn.akamai.steamstatic.com/steam/apps/" + res.AppID + "/header.jpg";
+                game.img_icon_url = "http://media.steampowered.com/steamcommunity/public/images/apps/" + res.AppID + "/" + res.IconUrl + ".jpg";
+                game.img_logo_url = "http://media.steampowered.com/steamcommunity/public/images/apps/" + res.AppID + "/" + res.LogoUrl + ".jpg";
+
+                //Ensure User entry for game doesn't exist in table
+                bool doesLibraryExist = (Database.GDescriptions.Any(u => u.userId.Equals(gameDesc.userId)) &amp;&amp;
+                    Database.GDescriptions.Any(a => a.appID.Equals(game.appID))); //AppID
+                //Ensure Game doesn't already exist in game table
+                bool doesGameExist = Database.Games.Any(a => a.appID.Equals(game.appID));
+
+                if (doesLibraryExist)
+                {
+                    // Do nothing
+                }
+                else
+                {
+                    if (doesGameExist)
+                    {
+                        //Add existing game object
+                        gameDesc.Game = Database.Games.Where(a => a.appID == game.appID).SingleOrDefault();
+                    }
+                    else
+                    {
+                        //add newly created game object
+                        gameDesc.Game = game;
+                        Database.Games.Add(game);
+                    }
+                    //Add User Record for game
+                    Database.GDescriptions.Add(gameDesc);
+                }
+
+            }
+            currentUser.GameCount = response.Data.GameCount;
+            Database.SaveChanges();
+
+            return RedirectToAction("Index");
+        }
+
+</pre>
+            <br>
+            <p>The logic breakdown of this controller is as follows.</p>
+            <ul>
+                <li>We obtain the user's ID from an http address provided from Steam's API in an earlier method. The Substring method is used to grab the relevant value for use in future calls.</li>
+                <li>We make our first call to Steam's API using a NuGet package.  SteamWebAPI is a useful package mainly for automatically deserializing the JSON response. This call is used to generate a key value from the service using our application's public key.</li>
+                <li>We chain our API response with a series of available methods, echoing a fluent API design pattern to minimize load time.</li>
+                <li>The response is a list of games with attributes.  We use a loop to parse each result and bind our selected attributes to a record for our database, using a repository design pattern.</li>
+                <li>We validate the app user's currently existing data to make sure we don't duplicate a game on their list based on the game's AppID.</li>
+            </ul>
+            <br>
+            </div>
+        </div>
+    </div>
+</body>
 </html>
 	
